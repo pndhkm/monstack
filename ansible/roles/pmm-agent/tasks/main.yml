@@ -1,0 +1,77 @@
+---
+- name: download pmm-agent binary package
+  ansible.builtin.unarchive:
+    remote_src: true
+    src: "https://downloads.percona.com/downloads/pmm2/{{ pmm2_agent_version }}/binary/tarball/pmm2-client-{{ pmm2_agent_version }}.tar.gz"
+    dest: /tmp/
+
+- name: install tarbal
+  vars:
+    PMM_DIR: /usr/local/percona/pmm2
+  ansible.builtin.shell: bash ./install_tarball
+  args:
+    chdir: /tmp/pmm2-client-{{ pmm2_agent_version }}
+    creates: /usr/local/percona/pmm2
+
+- name: create binary link
+  ansible.builtin.file:
+    src: "/usr/local/percona/pmm2/bin/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    state: link
+  with_items:
+  - pmm-agent
+  - pmm-admin
+
+- name: create pmm-agent systemd unit file
+  template:
+    src: pmm-agent.service
+    dest: "/etc/systemd/system/pmm-agent.service"
+    mode: 0644
+    backup: no
+  when: ansible_service_mgr == 'systemd'
+
+- name: start and enable pmm-agent service
+  systemd:
+    name: pmm-agent
+    enabled: yes
+    state: started
+    daemon-reload: yes
+  when: ansible_service_mgr == 'systemd'
+
+- name: create pmm-agent upstart file
+  template:
+    src: pmm-agent.upstart
+    dest: "/etc/rc.d/init.d/pmm-agent"
+    mode: 0755
+    backup: no
+  when: ansible_service_mgr == 'upstart'
+
+- name: start and enable pmm-agent service
+  command: |
+    service pmm-agent start
+    chkconfig pmm-agent on
+  when: ansible_service_mgr == 'upstart'
+
+- name: register pmm-agent
+  ignore_errors: true
+  command: |
+    /usr/local/percona/pmm2/bin/pmm-agent setup {{ ansible_ssh_host }} generic {{ ansible_hostname }} \
+      --server-address={{ domain }} \
+      --server-insecure-tls \
+      --server-username={{ user }} \
+      --server-password={{ dashboard_pass }}
+  tags:
+  - register
+
+- name: force register pmm-agent
+  ignore_errors: true
+  command: |
+    /usr/local/percona/pmm2/bin/pmm-agent setup {{ ansible_ssh_host }} generic {{ ansible_hostname }} \
+      --server-address={{ domain }} \
+      --server-insecure-tls \
+      --server-username={{ user }} \
+      --server-password={{ dashboard_pass }} \
+      --force
+  tags:
+  - never
+  - force-register

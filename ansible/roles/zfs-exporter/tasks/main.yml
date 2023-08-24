@@ -1,0 +1,22 @@
+---
+- name: download zfs_exporter binary package
+  ansible.builtin.unarchive:
+    remote_src: true
+    src: "https://github.com/pdf/zfs_exporter/releases/download/v{{ zfs_exporter_version }}/zfs_exporter-{{ zfs_exporter_version }}.linux-amd64.tar.gz"
+    dest: /usr/local/
+
+- name: create zfs_exporter systemd unit file
+  template:
+    src: zfs_exporter.service
+    dest: "/etc/systemd/system/zfs_exporter.service"
+    mode: 0644
+    backup: no
+  when: ansible_service_mgr == 'systemd'
+
+- name: start and enable zfs_exporter service
+  systemd:
+    name: zfs_exporter
+    enabled: yes
+    state: started
+    daemon-reload: yes
+  when: ansible_service_mgr == 'systemd'

@@ -1,0 +1,68 @@
+global:
+  scrape_interval: 2s
+  evaluation_interval: 2s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    scheme: https
+    scrape_interval: 2s
+    static_configs:
+      - targets: ['{{ domain }}:9090']
+    basic_auth:
+      username: "{{ user }}"
+      password: "{{ bauth_pass }}"
+      
+  - job_name: 'snmp'
+    scheme: https
+    metrics_path: /snmp
+    scrape_interval: 60s
+    scrape_timeout: 60s
+    static_configs:
+      - targets: ['192.168.77.2']
+        labels:
+          name: 'SW1'
+    basic_auth:
+      username: "{{ user }}"
+      password: "{{ bauth_pass }}"
+    params:
+      module: [if_mib]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: {{ domain }}:9116
+        
+  - job_name: icmp
+    scheme: https
+    metrics_path: /probe
+    static_configs:
+      - targets: ['8.8.8.8']
+        labels:
+          name: 'Google'
+      - targets: ['192.168.1.11']
+        labels:
+          name: 'My Website'
+    basic_auth:
+      username: "{{ user }}"
+      password: "{{ bauth_pass }}"
+    params:
+      module: [icmp]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: {{ domain }}:9115
+
+  - job_name: zfs-exporter
+    static_configs:
+      - targets: ['192.168.1.12:9134']
+        labels:
+          instance: 'My ZFS Pool'
+      
+
+
+

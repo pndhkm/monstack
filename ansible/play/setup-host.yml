@@ -1,0 +1,140 @@
+---
+- name: Setup
+  hosts: "{{ HOSTS }}"
+  become: yes
+  vars:
+    certs:
+      - src: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+        dest: "{{ workdir }}/pmm-server/nginx/certificate.crt"
+      - src: "/etc/letsencrypt/live/{{ domain }}/privkey.pem"
+        dest: "{{ workdir }}/pmm-server/nginx/certificate.key"
+    
+  tasks:
+    - name: Download Docker installation script
+      command: "{{ item }}"
+      with_items:
+       - curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+       - sudo sh /tmp/get-docker.sh
+
+    - name: Install requirements 
+      apt:
+        name:
+          - docker-compose
+          - rsync
+          - certbot
+          - cron
+
+    - name:  Synchronization monstack 
+      ansible.posix.synchronize:
+        src: "../../docker/monstack"
+        dest: /opt
+
+    - name: Create pmm-data container
+      command: "docker create --volume /srv --name pmm-data percona/pmm-server:2 /bin/true"
+      become: yes
+
+    - name: Copy data from pmm-data container
+      command: "docker cp pmm-data:/srv/ ./pmm-server"
+      args:
+        chdir: "{{ workdir }}"
+      become: yes
+
+    - name: Generate Hashed Password
+      set_fact:
+        hashed_password: "{{ lookup('pipe', 'python3 -c \"import bcrypt; print(bcrypt.hashpw(b\\\"' + bauth_pass + '\\\", bcrypt.gensalt(rounds=15)).decode(\\\"ascii\\\"))\"') }}"
+
+    - name: Create Prometheus Configuration File
+      template:
+        src: ../templates/prometheus.j2
+        dest: "{{ workdir }}/prometheus/prometheus.yml"
+
+    - name: Create docker-compose Configuration File
+      template:
+        src: ../templates/docker-compose.j2
+        dest: "{{ workdir }}/docker-compose.yml"
+
+    - name: Create web Configuration File
+      template:
+        src: ../templates/web.j2
+        dest: "{{ item }}"
+      with_items:
+        - "{{ workdir }}/snmp-exporter/web.yml"
+        - "{{ workdir }}/blackbox-exporter/web.yml"
+        - "{{ workdir }}/prometheus/web.yml"
+
+    - name: Synchronize prometheus from Server to Local
+      synchronize:
+        mode: pull
+        src: "{{ workdir }}/"
+        dest: "../../docker/monstack/"
+        rsync_opts:
+          - "--exclude=pmm-server/"
+
+    - name: Recursively change ownership of a directory
+      ansible.builtin.file:
+        path: "{{ workdir }}"
+        recurse: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+
+    - name: Start PMM Server with docker-compose
+      command: docker-compose up -d
+      args:
+        chdir: "{{ workdir }}" 
+      become: yes
+
+    - name: Get SSL Certificate
+      command: certbot certonly --standalone -d {{ domain }} --agree-tos --email {{ email }} --non-interactive --expand
+      register: certbot_output
+      environment:
+        CERTBOT_CERT_NAME: "{{ domain }}"
+
+    - debug:
+        var: certbot_output
+
+    - name: Copy SSL Files
+      copy: 
+        remote_src: yes
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      loop: "{{ certs }}"
+
+    - name: Create Cronjob for SSL Renewal
+      cron:
+        name: "Renew SSL Certificate"
+        minute: "0"
+        hour: "0"
+        month: "1"
+        job: "certbot renew --quiet"
+          
+    - name: Change permissions for files in the directory
+      find:
+        paths: "{{ workdir }}/pmm-server/nginx/"
+        recurse: yes
+        patterns: "*"
+        file_type: file
+      register: key_crt_files
+
+    - name: Change permissions for files
+      file:
+        path: "{{ item.path }}"
+        state: file
+        mode: '0644'
+      loop: "{{ key_crt_files.files }}"
+
+    - name: waiting the pmm-server is normal
+      pause:
+        minutes: 1
+
+    - name: Change owner to root
+      command: docker-compose exec pmm-server bash -c "chown -R root:root /srv && chown -R root:pmm /srv/clickhouse && chown -R grafana:grafana /srv/grafana && chown -R pmm:pmm /srv/logs && chown -R postgres:postgres /srv/postgres14 && chown -R pmm:pmm /srv/prometheus && chown -R pmm:pmm /srv/victoriametrics && chown -R postgres:postgres /srv/logs/postgresql14.log"
+      args:
+        chdir: "{{ workdir }}"  
+      become: yes
+    
+    - name: Set password for admin pmm dashboard
+      command: "docker exec pmm-server change-admin-password {{ dashboard_pass }}"
+
+    - include_playbook: restart-services.yml
+
+    

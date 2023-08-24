@@ -1,0 +1,4 @@
+pmm2_agent_version: "2.39.0"
+pmm_server_url: "https://{{ user }}:{{ dashboard_pass }}@{{ domain }}"
+zfs_exporter_version: "2.2.4"
+

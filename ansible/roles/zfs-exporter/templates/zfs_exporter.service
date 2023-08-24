@@ -1,0 +1,10 @@
+Description=zfs_exporter
+After=time-sync.target network.target
+
+[Service]
+ExecStart=/usr/local/zfs_exporter-{{ zfs_exporter_version }}.linux-amd64/zfs_exporter
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target

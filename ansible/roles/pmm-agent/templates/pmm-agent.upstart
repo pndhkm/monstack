@@ -1,0 +1,45 @@
+#!/bin/bash
+#/etc/rc.d/init.d/pmm-agent
+
+# chkconfig: 345 85 15
+
+# Source function library.
+. /etc/init.d/functions
+
+
+start() {
+        echo -n "Starting pmm-agent... "
+        nohup /usr/local/percona/pmm2/bin/pmm-agent --config-file=/usr/local/percona/pmm2/config/pmm-agent.yaml &
+        touch /var/lock/subsys/pmm-agent
+        return 0
+}
+
+stop() {
+        echo -n "Shutting down pmm-agent... "
+	killproc pmm-agent &
+        rm -f /var/lock/subsys/pmm-agent
+        return 0
+}
+
+case "$1" in
+    start)
+        start
+#!/bin/bash
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    reload)
+        ;;
+    *)
+        echo "Usage: pmm-agent {start|stop|status|reload|restart}"
+ exit 1
+        ;;
+esac
+exit $?

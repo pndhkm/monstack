@@ -1,0 +1,23 @@
+- hosts: "{{ HOSTS }}"
+  become: no
+  gather_facts: no
+
+  tasks:
+  - name: make sure rysnc installed
+    apt:
+      name: rsync
+  
+  - name: make sure workdir directory exist
+    file:
+      path: "{{ workdir }}"
+      state: directory
+      
+  - name: sync docker for monstack
+    ansible.posix.synchronize:
+      src: ../../docker/monstack/
+      dest: "{{ workdir }}"
+      mode: push 
+      rsync_opts:
+        - "--archive"
+        - "--no-owner"
+        - "--no-group"

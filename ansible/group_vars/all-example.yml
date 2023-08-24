@@ -1,0 +1,7 @@
+ansible_ssh_user: "root"
+domain: "paha.my.id"
+email: "email@paha.my.id"
+user: "admin"
+bauth_pass: "password"
+dashboard_pass: "pmm2@password!"
+workdir: "/opt/monstack"

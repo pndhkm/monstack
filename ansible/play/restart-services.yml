@@ -1,0 +1,29 @@
+- hosts: "{{ HOSTS }}"
+  become: no
+  gather_facts: no
+
+  tasks:
+  - name: restart pmm-server
+    command: |
+      docker-compose restart pmm-server
+    args:
+      chdir: "{{ workdir }}"
+    tags:
+      - pmm-server
+  
+  - name: restart prom-standalone
+    command: |
+      docker-compose restart prometheus
+    args:
+      chdir: "{{ workdir }}"
+    tags:
+      - prom-standalone
+
+  - name: restart snmp-exporter
+    command: |
+      docker-compose restart snmp-exporter
+    args:
+      chdir: "{{ workdir }}"
+    tags:
+      - snmp-exporter
+
