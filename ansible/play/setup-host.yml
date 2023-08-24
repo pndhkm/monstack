@@ -135,6 +135,12 @@
     - name: Set password for admin pmm dashboard
       command: "docker exec pmm-server change-admin-password {{ dashboard_pass }}"
 
-    - include_playbook: restart-services.yml
+    - name: restart pmm-server
+      command: |
+        docker-compose restart pmm-server
+      args:
+        chdir: "{{ workdir }}"
+      tags:
+        - pmm-server
 
     
