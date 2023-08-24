@@ -15,7 +15,7 @@ Before you begin, make sure you have the necessary configuration files ready. Yo
 - Copy `ansible/group_vars/all-example.yml` to `group_vars/all.yml`.
 - Copy `ansible/inventory-example` to `inventory`.
 
-To perform the [initial setup](./setup-local.md), then use the following Ansible command:
+To perform the [initial setup](./docs/setup-local.md), then use the following Ansible command:
 
     ansible-playbook -i inventory play/setup-host.yml -e "HOSTS=server"
     
