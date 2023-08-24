@@ -12,16 +12,6 @@ These stacks includes:
 * `blackbox-exporter` ->  a blackbox exporter designed for ICMP (ping) monitoring of domains/IPs and collecting related metrics.
 * `snmp-exporter` -> exporting snmp-v2 to prometheus metrics.
 
-## Prerequisites
-
-Before you begin, make sure you have the necessary configuration files ready. You can use the provided example files as a starting point:
-
-- Copy `ansible/group_vars/all-example.yml` to `group_vars/all.yml`.
-- Copy `ansible/inventory-example` to `inventory`.
-
-Modify these files according to your environment settings.
-
-
 ## Operational Runbook
 
 * [Local Environment Setup](./setup-local.md)

@@ -9,7 +9,17 @@ This repository sets up a monitoring stack using [Percona](https://www.percona.c
 - `blackbox-exporter`: Monitors domain/IP availability and latency.
 - `snmp-exporter`: Exports SNMP metrics for device monitoring.
 
-## Documentations
+## First Setup
+Before you begin, make sure you have the necessary configuration files ready. You can use the provided example files as a starting point:
+
+- Copy `ansible/group_vars/all-example.yml` to `group_vars/all.yml`.
+- Copy `ansible/inventory-example` to `inventory`.
+
+To perform the initial setup, use the following Ansible command:
+
+    ```
+    ansible-playbook -i inventory play/setup-host.yml -e "HOSTS=server"
+    ```
 
 For more documentation and operational runbooks. Please refer to [this docs](./docs/README.md).
 
