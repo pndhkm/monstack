@@ -53,6 +53,11 @@
         src: ../templates/docker-compose.j2
         dest: "{{ workdir }}/docker-compose.yml"
 
+    - name: Create script for renew LE
+      template:
+        src: ../templates/renew-cert.j2
+        dest: "{{ workdir }}/renew-cert.bash"
+
     - name: Create web Configuration File
       template:
         src: ../templates/web.j2
@@ -104,8 +109,8 @@
         name: "Renew SSL Certificate"
         minute: "0"
         hour: "0"
-        month: "1"
-        job: "certbot renew --quiet"
+        job: "/bin/bash {{ workdir }}/renew-cert.bash"
+      become: true
           
     - name: Change permissions for files in the directory
       find:
