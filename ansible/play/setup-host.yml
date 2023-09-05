@@ -29,9 +29,15 @@
         src: "../../docker/monstack"
         dest: /opt
 
-    - name: Create pmm-data container
+    - name: Check if pmm-data container exists
+      command: docker inspect pmm-data
+      ignore_errors: yes
+      register: container_check
+
+    - name: Create pmm-data container if it doesn't exist
       command: "docker create --volume /srv --name pmm-data percona/pmm-server:2 /bin/true"
       become: yes
+      when: container_check.rc != 0
 
     - name: Copy data from pmm-data container
       command: "docker cp pmm-data:/srv/ ./pmm-server"
@@ -43,11 +49,18 @@
       set_fact:
         hashed_password: "{{ lookup('pipe', 'python3 -c \"import bcrypt; print(bcrypt.hashpw(b\\\"' + bauth_pass + '\\\", bcrypt.gensalt(rounds=15)).decode(\\\"ascii\\\"))\"') }}"
 
+    - name: Create Prometheus directory
+      ansible.builtin.file:
+        path: "{{ workdir }}/prometheus"
+        state: directory
+      become: yes
+
     - name: Create Prometheus Configuration File
       template:
         src: ../templates/prometheus.j2
         dest: "{{ workdir }}/prometheus/prometheus.yml"
-
+      become: yes
+      
     - name: Create docker-compose Configuration File
       template:
         src: ../templates/docker-compose.j2
