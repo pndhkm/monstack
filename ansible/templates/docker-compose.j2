@@ -19,8 +19,6 @@ services:
       - GF_ANALYTICS_CHECK_FOR_UPDATES=false
       - GF_AUTH_LOGIN_COOKIE_NAME=pmm_session
       - GF_SECURITY_DISABLE_GRAVATAR=true
-      - SSL_CERT_FILE=/etc/letsencrypt/live/{{ domain }}/fullchain.pem 
-      - SSL_KEY_FILE=/etc/letsencrypt/live/{{ domain }}/privkey.pem
     volumes:
       - ./pmm-server:/srv
     expose:
