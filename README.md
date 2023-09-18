@@ -1,7 +1,7 @@
 > Tested on Debian based
 # Monitoring Stack: Percona, Grafana, Prometheus, Blackbox, SNMP Exporters
 
-This repository sets up a monitoring stack using [Percona](https://www.percona.com/), [Grafana](https://grafana.com/), [Prometheus](https://prometheus.io/), [Blackbox Exporter](https://github.com/prometheus/blackbox_exporter), and [SNMP Exporter](https://github.com/prometheus/snmp_exporter).
+This repository sets up a monitoring stack using [Percona](https://www.percona.com/), [Grafana](https://grafana.com/), [Prometheus](https://prometheus.io/), [Blackbox Exporter](https://github.com/prometheus/blackbox_exporter), [BIRD Exporter](https://github.com/czerwonk/bird_exporter), [ZFS Exporter](https://github.com/pdf/zfs_exporter), and [SNMP Exporter](https://github.com/prometheus/snmp_exporter).
 
 ## Components
 
