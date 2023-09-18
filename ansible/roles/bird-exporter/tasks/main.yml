@@ -1,0 +1,30 @@
+- name: add directory
+  file:
+    path: "{{ bird_workdir }}"
+    state: directory
+
+- name: Generate bird_exporter bash script
+  template:
+    src: "../templates/bird-exporter-bashsc.j2"
+    dest: "{{ bird_workdir }}/bird-exporter.bash"
+    mode: "0755"
+
+- name: Copy bird_exporter binary
+  copy:
+    src: "../bird_exporter"
+    dest: "{{ bird_workdir }}"
+    mode: "0755"
+
+- name: Generate bird_exporter systemd service unit
+  template:
+    src: "../templates/bird-exporter-service.j2"
+    dest: "/etc/systemd/system/bird-exporter.service"
+    mode: "0644"
+  
+- name: starting the exporter
+  systemd:
+    enabled: yes
+    daemon_reload: yes
+    state: started
+    name: bird-exporter
+

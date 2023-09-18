@@ -1,7 +1,11 @@
-server ansible_ssh_host=103.X.X.X
+server ansible_host=103.X.X.X
 
 [linux]
-pmm-agent ansible_ssh_host=192.168.1.100
+pmm-agent ansible_host=192.168.1.100
+
+[routers]
+bird1   ansible_host=103.XX    private_ip=192.168.2.210
 
 [clients:children]
+routers
 linux

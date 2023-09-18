@@ -1,0 +1,8 @@
+- hosts: "{{ HOSTS }}"
+  become: yes
+  gather_facts: "{{ GATHER_FACTS | default('yes')  }}"
+
+  roles:
+  - role: bird
+    tags:
+    - bird

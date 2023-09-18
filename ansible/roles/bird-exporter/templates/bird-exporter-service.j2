@@ -1,0 +1,17 @@
+[Unit] 
+Description=bird_exporter
+After=network.target
+
+[Service]     
+ExecStart=/usr/bin/bash {{ bird_workdir }}/bird-exporter.bash
+User=root
+Group=root
+SyslogIdentifier=bird_exporter
+Type=simple
+KillMode=process
+TimeoutStopSec=90
+Restart=on-failure 
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
